@@ -1,6 +1,6 @@
 // Saves the app on the phone so it opens with no internet.
 // Bump VERSION whenever you change index.html so phones pick up the new copy.
-const VERSION = 'mgkg-v1';
+const VERSION = 'mgkg-v2';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

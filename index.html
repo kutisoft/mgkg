@@ -77,6 +77,10 @@ button{cursor:pointer}
 .result .head{padding:14px 14px 10px;border-bottom:1px dashed var(--line);display:flex;flex-direction:column;gap:4px}
 .route{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:2px 7px}
 .rule{font-family:var(--f-num);font-size:.95rem;color:var(--pen)}
+.give{background:var(--ok-soft);color:var(--ok);padding:12px 14px;display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--line)}
+.give-l{font-size:.74rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.give-v{font-family:var(--f-num);font-size:1.7rem;font-weight:600;line-height:1.15;color:var(--ink)}
+.give-s{font-size:.88rem;color:var(--ink)}
 .figs{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line)}
 .fig{background:var(--surface);padding:12px 14px;min-width:0}
 .fig .v{font-family:var(--f-num);font-size:1.3rem;font-weight:600;line-height:1.15;word-break:break-word}
@@ -397,6 +401,7 @@ function renderResult(){
   el.innerHTML=`<div class="result" aria-live="polite">
     <div class="head">${d.route?`<div><span class="route">${esc(d.route)}</span></div>`:""}<h2>${esc(d.name)}</h2>
       <div class="rule">${ruleText(d)} · ${FREQ_SHORT[d.freq]??""}</div></div>
+    <div class="give"><span class="give-l">This is the dose to give</span><span class="give-v">${range(c.doseLo,c.doseHi,"mg")}</span><span class="give-s">${c.f>0?esc(freqText(d)):"as a single dose"}${c.day?` · ${range(c.day[0],c.day[1],"mg")} in total per day`:""}</span></div>
     <div class="figs">
       <div class="fig"><div class="s">Each dose</div><div class="v">${range(c.doseLo,c.doseHi,"")}<small>mg</small></div><div class="s">${esc(freqText(d))}</div></div>
       <div class="fig"><div class="s">Per day</div><div class="v">${c.day?range(c.day[0],c.day[1],""):"—"}<small>${c.day?"mg":""}</small></div><div class="s">${c.day?`in ${c.f} dose${c.f>1?"s":""}`:"one-off dose"}</div></div>
