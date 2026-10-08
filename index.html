@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>mg/kg Pocket Guide</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="mg/kg">
+<meta name="theme-color" content="#1f4e5f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500;600&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap">
+<style>
+/* Layout: a single-column drug chart in the hand. Weight on top, the answer card, then the formulary list; tab bar at the thumb. */
+:root{
+  --bg:#f3f6f6; --surface:#ffffff; --ink:#15262d; --muted:#5b6f76; --line:#d7e1e3;
+  --accent:#1f4e5f; --accent-ink:#ffffff; --accent-soft:#e1edf0;
+  --pen:#b2452c; --ok:#2f7a4f; --ok-soft:#e3f2e8; --warn:#9a6a00; --warn-soft:#fbf1d6;
+  --f-display:"Bricolage Grotesque", "Atkinson Hyperlegible", system-ui, sans-serif;
+  --f-body:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-num:"IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1719; --surface:#172326; --ink:#e4eef0; --muted:#93a9af; --line:#2a3b40;
+  --accent:#7cc3d6; --accent-ink:#0b1416; --accent-soft:#1d3238;
+  --pen:#f08c70; --ok:#7fd3a0; --ok-soft:#183126; --warn:#e8c25a; --warn-soft:#2e2814; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1719; --surface:#172326; --ink:#e4eef0; --muted:#93a9af; --line:#2a3b40;
+  --accent:#7cc3d6; --accent-ink:#0b1416; --accent-soft:#1d3238;
+  --pen:#f08c70; --ok:#7fd3a0; --ok-soft:#183126; --warn:#e8c25a; --warn-soft:#2e2814; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--f-body);font-size:16px;line-height:1.45;padding-inline:16px;padding-block:0 calc(84px + env(safe-area-inset-bottom,0px))}
+.wrap{max-width:560px;margin:0 auto}
+header.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-block:18px 10px}
+h1{font-family:var(--f-display);font-weight:800;font-size:1.5rem;letter-spacing:-.01em;margin:0}
+h1 span{color:var(--pen)}
+h2{font-family:var(--f-display);font-weight:600;font-size:1.15rem;margin:0;text-wrap:balance}
+.eyebrow{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.disclaimer{font-size:.82rem;color:var(--warn);background:var(--warn-soft);border-radius:10px;padding:10px 12px;margin-block:0 14px}
+.disclaimer b{color:inherit}
+
+/* weight */
+.weight{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
+.weight label{flex:0 0 auto}
+.weight .field{flex:1;display:flex;align-items:baseline;justify-content:center;gap:6px;min-width:0}
+.weight input{width:100%;max-width:8ch;text-align:right;border:0;background:transparent;font-family:var(--f-num);font-size:2rem;font-weight:600;padding:0}
+.weight input:focus{outline:none}
+.weight .unit{font-family:var(--f-num);color:var(--muted);font-size:1.1rem}
+.step{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--accent-soft);font-size:1.4rem;line-height:1;color:var(--accent);flex:0 0 auto}
+
+/* universal form */
+.calc-form{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.calc-form input,.calc-form select{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;font-size:1.05rem}
+#cf-name{font-weight:700}
+.dose-row{display:grid;grid-template-columns:1.4fr 1fr;gap:10px;margin-top:12px}
+.dose-in{display:flex;flex-direction:column;gap:6px;min-width:0}
+.dose-in.full{grid-column:1/-1}
+.pair{display:flex;align-items:center;gap:6px}
+.pair input{min-width:0;font-family:var(--f-num);font-weight:600;font-size:1.2rem;padding:10px}
+.pair span{color:var(--muted);font-size:.85rem}
+.save-row{padding:0 14px 12px}
+
+/* result */
+.result{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.result .head{padding:14px 14px 10px;border-bottom:1px dashed var(--line);display:flex;flex-direction:column;gap:4px}
+.route{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:2px 7px}
+.rule{font-family:var(--f-num);font-size:.95rem;color:var(--pen)}
+.figs{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line)}
+.fig{background:var(--surface);padding:12px 14px;min-width:0}
+.fig .v{font-family:var(--f-num);font-size:1.3rem;font-weight:600;line-height:1.15;word-break:break-word}
+.fig .v small{font-size:.8rem;color:var(--muted);font-weight:500}
+.fig .s{font-size:.8rem;color:var(--muted)}
+.working{padding:12px 14px;font-family:var(--f-num);font-size:.82rem;color:var(--muted);border-top:1px solid var(--line);white-space:pre-wrap}
+.flag{margin:0 14px 12px;font-size:.85rem;border-radius:8px;padding:8px 10px;background:var(--warn-soft);color:var(--warn)}
+.notes{padding:0 14px 12px;font-size:.9rem}
+.src{padding:10px 14px;font-size:.78rem;color:var(--muted);border-top:1px solid var(--line)}
+
+/* list */
+.search{margin-top:18px;position:relative}
+.search input{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;font-size:1rem}
+.list{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column}
+.list li button{width:100%;text-align:left;background:transparent;border:0;border-bottom:1px solid var(--line);padding:12px 4px;display:flex;align-items:center;gap:10px}
+.list li button[aria-current="true"]{background:var(--accent-soft);border-radius:10px}
+.list .nm{flex:1;min-width:0}
+.list .nm b{display:block;font-weight:700}
+.list .nm span{font-size:.8rem;color:var(--muted)}
+.list .rt{font-family:var(--f-num);font-size:.78rem;color:var(--pen);text-align:right;flex:0 0 auto;max-width:44%}
+.empty{color:var(--muted);padding:16px 4px}
+
+/* study */
+.seg{display:flex;gap:6px;background:var(--accent-soft);padding:4px;border-radius:12px;margin-bottom:14px}
+.seg button{flex:1;border:0;background:transparent;border-radius:9px;padding:9px 6px;font-weight:700;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.card{perspective:1200px;height:260px;margin-bottom:12px}
+.card .inner{position:relative;width:100%;height:100%;transition:transform .45s ease;transform-style:preserve-3d;cursor:pointer}
+.card.flipped .inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:8px}
+.face.back{transform:rotateY(180deg)}
+.face .big{font-family:var(--f-display);font-size:1.6rem;font-weight:800;line-height:1.15}
+.face .rule{font-size:1.3rem}
+.face .hint{font-size:.8rem;color:var(--muted)}
+.row{display:flex;gap:10px}
+.btn{flex:1;border-radius:12px;padding:12px;border:1px solid var(--line);background:var(--surface);font-weight:700}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.good{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.btn.again{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.progress{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted);margin-bottom:8px}
+.quiz{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px}
+.quiz .q{font-size:1.05rem}
+.quiz input{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;font-family:var(--f-num);font-size:1.3rem;background:var(--bg)}
+.verdict{border-radius:10px;padding:10px 12px;font-size:.92rem}
+.verdict.ok{background:var(--ok-soft);color:var(--ok)}
+.verdict.no{background:var(--warn-soft);color:var(--warn)}
+.verdict pre{font-family:var(--f-num);font-size:.8rem;white-space:pre-wrap;margin:6px 0 0;color:inherit}
+
+/* manage */
+.mlist{list-style:none;padding:0;margin:0 0 14px}
+.mlist li{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line);padding:10px 2px}
+.mlist li .nm{flex:1;min-width:0}
+.mlist li .nm span{display:block;font-size:.8rem;color:var(--muted)}
+.tag{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--pen)}
+.icon-btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 11px;font-size:.85rem;font-weight:700}
+form.editor{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+form.editor .full{grid-column:1/-1}
+form.editor label{display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:var(--muted);font-weight:700;min-width:0}
+form.editor input,form.editor select,form.editor textarea{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:10px;font-size:1rem;font-weight:400;color:var(--ink);width:100%}
+form.editor textarea{min-height:70px;resize:vertical}
+.confirm{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;font-size:.9rem}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font-size:.9rem;z-index:20}
+
+/* tabs */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));z-index:10}
+nav.tabs .in{display:flex;gap:4px;width:100%;max-width:560px}
+nav.tabs button{flex:1;border:0;background:transparent;border-radius:12px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.78rem;font-weight:700;color:var(--muted)}
+nav.tabs button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs button[aria-selected="true"]{color:var(--accent);background:var(--accent-soft)}
+footer.foot{font-size:.78rem;color:var(--muted);margin-top:22px}
+@media (prefers-reduced-motion: reduce){.card .inner{transition:none}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header class="top">
+    <h1>mg<span>/</span>kg</h1>
+    <span class="eyebrow">Weight-based dosing</span>
+  </header>
+  <p class="disclaimer"><b>Learning aid only.</b> Doses are typical paediatric/adult references, not for neonates. Always check your local formulary/BNF, the indication and renal function before prescribing.</p>
+
+  <!-- CALCULATE -->
+  <section id="tab-calc">
+    <div class="calc-form">
+      <label for="cf-name" class="eyebrow">Drug name</label>
+      <input id="cf-name" list="drug-names" placeholder="Type any drug, e.g. Gentamicin" autocomplete="off">
+      <datalist id="drug-names"></datalist>
+    </div>
+    <div class="weight">
+      <button class="step" id="w-minus" aria-label="Decrease weight">−</button>
+      <div class="field">
+        <label for="weight" class="eyebrow">Baby's weight</label>
+        <input id="weight" class="num" type="number" inputmode="decimal" min="0.5" max="200" step="0.1" value="20">
+        <span class="unit">kg</span>
+      </div>
+      <button class="step" id="w-plus" aria-label="Increase weight">+</button>
+    </div>
+    <div class="calc-form dose-row">
+      <div class="dose-in">
+        <label for="cf-min" class="eyebrow">Dose</label>
+        <div class="pair"><input id="cf-min" class="num" type="number" inputmode="decimal" step="any" placeholder="3"><span>to</span><input id="cf-max" class="num" type="number" inputmode="decimal" step="any" placeholder="5"></div>
+      </div>
+      <div class="dose-in">
+        <label for="cf-basis" class="eyebrow">Unit</label>
+        <select id="cf-basis"><option value="day">mg/kg/day</option><option value="dose">mg/kg/dose</option></select>
+      </div>
+      <div class="dose-in full">
+        <label for="cf-freq" class="eyebrow">Given</label>
+        <select id="cf-freq">
+          <option value="1">Once daily (q24h)</option><option value="2">Twice daily (q12h)</option>
+          <option value="3">3 times daily (q8h)</option><option value="4">4 times daily (q6h)</option>
+          <option value="6">6 times daily (q4h)</option><option value="0">Single dose (stat)</option></select>
+      </div>
+    </div>
+    <div id="result"></div>
+    <div class="search">
+      <label for="q" class="eyebrow">Or pick from the drug list</label>
+      <input id="q" type="search" placeholder="Search e.g. gent, ceftriaxone, IV" autocomplete="off">
+    </div>
+    <ul class="list" id="list"></ul>
+  </section>
+
+  <!-- STUDY -->
+  <section id="tab-study" hidden>
+    <div class="seg" role="group" aria-label="Study mode">
+      <button id="m-cards" aria-pressed="true">Flashcards</button>
+      <button id="m-quiz" aria-pressed="false">Dose quiz</button>
+    </div>
+    <div id="cards-pane">
+      <div class="progress"><span id="c-pos"></span><span id="c-known"></span></div>
+      <div class="card" id="card" tabindex="0" role="button" aria-label="Flip card">
+        <div class="inner">
+          <div class="face front"><span class="route" id="c-route"></span><div class="big" id="c-name"></div><div class="hint" id="c-use"></div><div class="hint">Tap to reveal the dose</div></div>
+          <div class="face back"><div class="rule" id="c-rule"></div><div id="c-freq"></div><div class="hint" id="c-max"></div><div class="hint" id="c-src"></div></div>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn again" id="c-again">Review again</button>
+        <button class="btn good" id="c-good">I knew it</button>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="c-shuffle">Shuffle</button>
+        <button class="btn" id="c-reset">Reset progress</button>
+      </div>
+    </div>
+    <div id="quiz-pane" hidden>
+      <div class="quiz">
+        <span class="eyebrow">Work it out</span>
+        <div class="q" id="z-q"></div>
+        <label for="z-a" class="eyebrow" id="z-label">Your answer (mg per dose)</label>
+        <input id="z-a" type="number" inputmode="decimal" placeholder="mg">
+        <div class="row">
+          <button class="btn" id="z-show">Show answer</button>
+          <button class="btn primary" id="z-check">Check</button>
+        </div>
+        <div id="z-v"></div>
+        <button class="btn" id="z-next">Next question</button>
+      </div>
+      <p class="progress" style="margin-top:10px"><span id="z-score"></span></p>
+    </div>
+  </section>
+
+  <!-- MANAGE -->
+  <section id="tab-drugs" hidden>
+    <div class="row" style="margin-bottom:14px">
+      <button class="btn primary" id="add">Add a drug</button>
+    </div>
+    <form class="editor" id="editor" hidden>
+      <h2 class="full" id="ed-title">Add a drug</h2>
+      <label class="full">Drug name<input id="f-name" required placeholder="e.g. Gentamicin"></label>
+      <label>Route<input id="f-route" placeholder="IV, PO, IM"></label>
+      <label>Used for<input id="f-use" placeholder="e.g. Sepsis"></label>
+      <label>Dose from (mg/kg)<input id="f-min" type="number" step="any" inputmode="decimal" required></label>
+      <label>Dose to (mg/kg)<input id="f-max" type="number" step="any" inputmode="decimal" placeholder="same as from"></label>
+      <label>Per<select id="f-basis"><option value="day">day (mg/kg/day)</option><option value="dose">dose (mg/kg/dose)</option></select></label>
+      <label>How often<select id="f-freq">
+        <option value="1">Once daily (q24h)</option><option value="2">Twice daily (q12h)</option>
+        <option value="3">3 times daily (q8h)</option><option value="4">4 times daily (q6h)</option>
+        <option value="6">6 times daily (q4h)</option><option value="0">Single dose (stat)</option></select></label>
+      <label>Max per dose (mg)<input id="f-maxdose" type="number" step="any" inputmode="decimal" placeholder="optional"></label>
+      <label>Max per day (mg)<input id="f-maxday" type="number" step="any" inputmode="decimal" placeholder="optional"></label>
+      <label class="full">Notes<textarea id="f-notes" placeholder="Indication, monitoring, special cases"></textarea></label>
+      <label class="full">Source<input id="f-source" placeholder="e.g. BNFc 2024, hospital guideline"></label>
+      <div class="full" id="f-err" style="color:var(--pen);font-size:.9rem" hidden></div>
+      <div class="full row"><button type="button" class="btn" id="f-cancel">Cancel</button><button type="submit" class="btn primary">Save drug</button></div>
+    </form>
+    <ul class="mlist" id="mlist"></ul>
+    <div id="reset-zone">
+      <button class="btn" id="restore" style="width:100%">Restore the original drug list</button>
+    </div>
+    <footer class="foot">Your drugs and changes are saved on this phone only. Starting doses come from BNF / BNF for Children, the WHO Pocket Book of Hospital Care for Children (2013), WHO malaria guidelines, BTS/SIGN asthma guidance and Resuscitation Council UK. Each drug shows its source.</footer>
+  </section>
+</div>
+
+<nav class="tabs" role="tablist">
+  <div class="in">
+    <button role="tab" aria-selected="true" data-tab="calc"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h2M12 11h2M16 11h0M8 15h2M12 15h2M8 18h2M12 18h2M16 15v3"/></svg>Calculate</button>
+    <button role="tab" aria-selected="false" data-tab="study"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="14" height="13" rx="2"/><path d="M7 3h12a2 2 0 0 1 2 2v11"/></svg>Study</button>
+    <button role="tab" aria-selected="false" data-tab="drugs"><svg viewBox="0 0 24 24"><path d="M10.5 3.5a5 5 0 0 1 7 7l-7 7a5 5 0 0 1-7-7z"/><path d="M7 7l7 7"/></svg>My drugs</button>
+  </div>
+</nav>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+const BNFC="BNF for Children (BNFc)", BNF="BNF (adult)", WHO="WHO Pocket Book of Hospital Care for Children, 2nd ed. (2013)";
+// basis: 'day' = mg/kg/day split into freq doses; 'dose' = mg/kg per dose. freq = doses per day (0 = single dose).
+const SEED=[
+ {id:"gent-adult",name:"Gentamicin",route:"IV",use:"Serious Gram-negative infection (multiple daily dosing)",basis:"day",min:3,max:5,freq:3,maxDose:null,maxDay:null,notes:"Classic adult regimen: 3–5 mg/kg/day in 3 divided doses (q8h). Check peak/trough levels and renal function. Once-daily (extended interval) regimens use 5–7 mg/kg.",source:BNF},
+ {id:"gent-child",name:"Gentamicin (child, once daily)",route:"IV",use:"Sepsis, pneumonia (children)",basis:"day",min:7.5,max:7.5,freq:1,maxDose:null,maxDay:null,notes:"WHO: 7.5 mg/kg once daily for children. BNFc once-daily regimen is 7 mg/kg. Monitor levels; reduce in renal impairment.",source:WHO+"; "+BNFC},
+ {id:"amik",name:"Amikacin",route:"IV",use:"Gram-negative infection, resistant organisms",basis:"day",min:15,max:15,freq:1,maxDose:1500,maxDay:1500,notes:"15 mg/kg once daily. Monitor levels and renal function.",source:WHO+"; "+BNFC},
+ {id:"amox",name:"Amoxicillin",route:"PO",use:"Pneumonia, otitis media, UTI",basis:"day",min:25,max:50,freq:3,maxDose:1000,maxDay:null,notes:"Standard 25–50 mg/kg/day in 3 doses. High-dose for pneumonia/otitis: 80–90 mg/kg/day (WHO pneumonia: 40 mg/kg/dose twice daily).",source:BNFC+"; "+WHO},
+ {id:"ampi",name:"Ampicillin",route:"IV/IM",use:"Serious bacterial infection, with gentamicin",basis:"dose",min:50,max:50,freq:4,maxDose:2000,maxDay:null,notes:"50 mg/kg every 6 hours, usually given with gentamicin.",source:WHO},
+ {id:"benpen",name:"Benzylpenicillin (Penicillin G)",route:"IV",use:"Pneumonia, meningococcal disease",basis:"dose",min:25,max:50,freq:4,maxDose:2400,maxDay:null,notes:"25 mg/kg every 6 hours, 50 mg/kg in severe infection/meningitis. 600 mg = 1 million units (WHO dose 50,000 U/kg = 30 mg/kg).",source:BNFC+"; "+WHO},
+ {id:"cftx",name:"Ceftriaxone",route:"IV/IM",use:"Sepsis, pneumonia",basis:"day",min:50,max:80,freq:1,maxDose:4000,maxDay:4000,notes:"50–80 mg/kg once daily. Meningitis: 100 mg/kg/day (max 4 g). Avoid with calcium-containing IV fluids.",source:BNFC+"; "+WHO},
+ {id:"cftx-men",name:"Ceftriaxone (meningitis)",route:"IV",use:"Bacterial meningitis",basis:"day",min:100,max:100,freq:1,maxDose:4000,maxDay:4000,notes:"100 mg/kg once daily, or 50 mg/kg every 12 hours.",source:WHO+"; "+BNFC},
+ {id:"cefo",name:"Cefotaxime",route:"IV",use:"Sepsis, meningitis",basis:"dose",min:50,max:50,freq:3,maxDose:3000,maxDay:12000,notes:"50 mg/kg every 8 hours; every 6 hours in severe infection or meningitis (max 12 g/day).",source:BNFC+"; "+WHO},
+ {id:"clox",name:"Cloxacillin / Flucloxacillin",route:"IV",use:"Staphylococcal infection, cellulitis, osteomyelitis",basis:"dose",min:25,max:50,freq:4,maxDose:2000,maxDay:null,notes:"25–50 mg/kg every 6 hours; use the higher dose for bone/joint or severe infection.",source:WHO+"; "+BNFC},
+ {id:"metro",name:"Metronidazole",route:"IV/PO",use:"Anaerobic infection",basis:"dose",min:7.5,max:7.5,freq:3,maxDose:500,maxDay:null,notes:"7.5 mg/kg every 8 hours (max 500 mg per dose).",source:BNFC+"; "+WHO},
+ {id:"azi",name:"Azithromycin",route:"PO",use:"Atypical pneumonia, trachoma",basis:"dose",min:10,max:10,freq:1,maxDose:500,maxDay:500,notes:"10 mg/kg once daily, usually for 3 days.",source:BNFC},
+ {id:"cipro",name:"Ciprofloxacin",route:"PO",use:"Shigella dysentery, typhoid, complicated UTI",basis:"dose",min:10,max:20,freq:2,maxDose:750,maxDay:null,notes:"10–20 mg/kg every 12 hours (WHO shigella: 15 mg/kg twice daily for 3 days).",source:WHO+"; "+BNFC},
+ {id:"ctx",name:"Co-trimoxazole (trimethoprim part)",route:"PO",use:"PCP prophylaxis/treatment, UTI",basis:"dose",min:4,max:4,freq:2,maxDose:160,maxDay:null,notes:"Dose is for the TRIMETHOPRIM component: 4 mg/kg TMP + 20 mg/kg SMX every 12 hours. PCP treatment is much higher (TMP 5 mg/kg every 6–8 hours).",source:WHO},
+ {id:"vanc",name:"Vancomycin",route:"IV",use:"MRSA, serious Gram-positive infection",basis:"dose",min:15,max:15,freq:4,maxDose:null,maxDay:null,notes:"15 mg/kg every 6 hours (child). Adjust to trough levels; infuse slowly to avoid red man syndrome.",source:BNFC},
+ {id:"chlor",name:"Chloramphenicol",route:"IV",use:"Meningitis, typhoid (where indicated)",basis:"dose",min:25,max:25,freq:4,maxDose:1000,maxDay:null,notes:"25 mg/kg every 6 hours (max 1 g per dose). Avoid in young infants (grey baby syndrome).",source:WHO},
+ {id:"acic",name:"Aciclovir",route:"IV",use:"HSV encephalitis, severe varicella",basis:"dose",min:10,max:20,freq:3,maxDose:null,maxDay:null,notes:"10 mg/kg every 8 hours; 20 mg/kg every 8 hours for HSV encephalitis in children under 12. Keep well hydrated.",source:BNFC},
+ {id:"flu",name:"Fluconazole",route:"IV/PO",use:"Invasive candidiasis",basis:"dose",min:6,max:12,freq:1,maxDose:800,maxDay:800,notes:"6–12 mg/kg once daily depending on infection.",source:BNFC},
+ {id:"para",name:"Paracetamol",route:"PO",use:"Pain, fever",basis:"dose",min:10,max:15,freq:4,maxDose:1000,maxDay:4000,notes:"10–15 mg/kg every 4–6 hours, max 4 doses (60 mg/kg) in 24 hours.",source:BNFC+"; "+WHO},
+ {id:"ibu",name:"Ibuprofen",route:"PO",use:"Pain, fever, inflammation",basis:"dose",min:5,max:10,freq:3,maxDose:400,maxDay:null,notes:"5–10 mg/kg every 6–8 hours, max 30–40 mg/kg/day. Give with food; avoid in dehydration.",source:BNFC+"; "+WHO},
+ {id:"morph",name:"Morphine",route:"IV",use:"Severe pain",basis:"dose",min:0.05,max:0.1,freq:6,maxDose:null,maxDay:null,notes:"50–100 micrograms/kg every 4 hours, titrated to response. Use lower doses in infants; monitor breathing.",source:WHO+"; "+BNFC},
+ {id:"diaz",name:"Diazepam",route:"IV",use:"Convulsions",basis:"dose",min:0.2,max:0.3,freq:0,maxDose:10,maxDay:null,notes:"0.2–0.3 mg/kg IV slowly; may repeat once after 10 minutes. Rectal dose is 0.5 mg/kg. Watch for respiratory depression.",source:WHO},
+ {id:"phen-load",name:"Phenobarbital (loading)",route:"IV",use:"Status epilepticus, ongoing seizures",basis:"dose",min:15,max:20,freq:0,maxDose:1000,maxDay:null,notes:"15–20 mg/kg IV loading dose, then maintenance.",source:WHO+"; "+BNFC},
+ {id:"phen-maint",name:"Phenobarbital (maintenance)",route:"IV/PO",use:"Seizure control",basis:"day",min:2.5,max:5,freq:1,maxDose:null,maxDay:null,notes:"2.5–5 mg/kg/day, once daily or in 2 divided doses.",source:WHO+"; "+BNFC},
+ {id:"furo",name:"Furosemide",route:"IV/PO",use:"Fluid overload, heart failure",basis:"dose",min:0.5,max:1,freq:2,maxDose:40,maxDay:null,notes:"0.5–1 mg/kg per dose, every 8–24 hours depending on response. Monitor potassium.",source:BNFC+"; "+WHO},
+ {id:"ond",name:"Ondansetron",route:"IV/PO",use:"Nausea and vomiting",basis:"dose",min:0.1,max:0.15,freq:3,maxDose:4,maxDay:null,notes:"0.1–0.15 mg/kg per dose (max 4 mg), up to every 8 hours.",source:BNFC},
+ {id:"dexa",name:"Dexamethasone (croup)",route:"PO",use:"Croup",basis:"dose",min:0.15,max:0.6,freq:0,maxDose:10,maxDay:null,notes:"Single dose 0.15 mg/kg (mild/moderate) up to 0.6 mg/kg (severe).",source:BNFC},
+ {id:"pred",name:"Prednisolone (asthma)",route:"PO",use:"Acute asthma",basis:"day",min:1,max:2,freq:1,maxDose:40,maxDay:40,notes:"1–2 mg/kg once daily for 3 days (max 40 mg).",source:"BTS/SIGN asthma guideline; "+BNFC},
+ {id:"hydro",name:"Hydrocortisone",route:"IV",use:"Severe asthma, adrenal crisis",basis:"dose",min:4,max:4,freq:4,maxDose:100,maxDay:null,notes:"4 mg/kg every 6 hours (max 100 mg per dose).",source:BNFC},
+ {id:"adren",name:"Adrenaline (anaphylaxis)",route:"IM",use:"Anaphylaxis",basis:"dose",min:0.01,max:0.01,freq:0,maxDose:0.5,maxDay:null,notes:"0.01 mg/kg = 0.01 mL/kg of 1:1000 (1 mg/mL) IM, max 0.5 mg. Repeat after 5 minutes if no improvement.",source:"Resuscitation Council UK (2021)"},
+ {id:"arte-small",name:"Artesunate (under 20 kg)",route:"IV/IM",use:"Severe malaria",basis:"dose",min:3,max:3,freq:0,maxDose:null,maxDay:null,minKg:0,maxKg:20,notes:"3 mg/kg at 0, 12 and 24 hours, then once daily until able to take oral treatment.",source:"WHO Guidelines for malaria"},
+ {id:"arte-big",name:"Artesunate (20 kg and over)",route:"IV/IM",use:"Severe malaria",basis:"dose",min:2.4,max:2.4,freq:0,maxDose:null,maxDay:null,minKg:20,maxKg:null,notes:"2.4 mg/kg at 0, 12 and 24 hours, then once daily until able to take oral treatment.",source:"WHO Guidelines for malaria"}
+];
+const FREQ={1:"once daily (q24h)",2:"twice daily (q12h)",3:"3 times daily (q8h)",4:"4 times daily (q6h)",6:"6 times daily (q4h)",0:"single dose"};
+const FREQ_SHORT={1:"q24h",2:"q12h",3:"q8h",4:"q6h",6:"q4h",0:"stat"};
+const K={drugs:"mgkg.drugs.v1",w:"mgkg.weight",sel:"mgkg.sel",known:"mgkg.known",tab:"mgkg.tab"};
+function load(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+let drugs=load(K.drugs,null)||SEED.map(d=>({...d}));
+let weight=load(K.w,20), selId=load(K.sel,"gent-adult"), known=new Set(load(K.known,[]));
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function fmt(n){if(n==null||!isFinite(n))return"–";const a=Math.abs(n);let r=a>=100?Math.round(n):a>=10?Math.round(n*10)/10:a>=1?Math.round(n*100)/100:Math.round(n*1000)/1000;return r.toLocaleString("en-GB",{maximumFractionDigits:3})}
+function range(a,b,u){return Math.abs(a-b)<1e-9?`${fmt(a)} ${u}`:`${fmt(a)}–${fmt(b)} ${u}`}
+function ruleText(d){const r=d.min===d.max||d.max==null?fmt(d.min):`${fmt(d.min)}–${fmt(d.max)}`;return `${r} mg/kg/${d.basis}`}
+function freqText(d){return FREQ[d.freq]??`${d.freq}× daily`}
+
+function calc(d,w){
+  const mx=d.max==null?d.min:d.max, f=+d.freq;
+  let doseLo,doseHi;
+  if(d.basis==="day"){const n=f>0?f:1;doseLo=d.min*w/n;doseHi=mx*w/n}else{doseLo=d.min*w;doseHi=mx*w}
+  const rawLo=doseLo, rawHi=doseHi, caps=[];
+  let cap=Infinity;
+  if(d.maxDose)cap=Math.min(cap,d.maxDose);
+  if(d.maxDay&&f>0)cap=Math.min(cap,d.maxDay/f);
+  if(doseHi>cap){doseHi=cap;caps.push(d.maxDose&&cap===d.maxDose?`max ${fmt(d.maxDose)} mg per dose`:`max ${fmt(d.maxDay)} mg per day`)}
+  if(doseLo>cap)doseLo=cap;
+  const day=f>0?[doseLo*f,doseHi*f]:null;
+  return {doseLo,doseHi,rawLo,rawHi,day,capped:caps.length>0,caps,f};
+}
+function working(d,w,c){
+  const mx=d.max==null?d.min:d.max, lines=[];
+  if(d.basis==="day"){
+    lines.push(`${fmt(w)} kg × ${ruleText(d)} = ${range(d.min*w,mx*w,"mg/day")}`);
+    if(c.f>0)lines.push(`÷ ${c.f} doses = ${range(c.rawLo,c.rawHi,"mg/dose")}`);
+  }else{
+    lines.push(`${fmt(w)} kg × ${ruleText(d)} = ${range(c.rawLo,c.rawHi,"mg/dose")}`);
+    if(c.f>0)lines.push(`× ${c.f} doses = ${range(c.rawLo*c.f,c.rawHi*c.f,"mg/day")}`);
+  }
+  if(c.capped)lines.push(`capped: ${c.caps.join(", ")}`);
+  return lines.join("\n");
+}
+
+/* universal form: any drug name + weight + mg/kg. A list drug is used only while the form still matches it. */
+function fillForm(d){
+  $("cf-name").value=d.name;$("cf-min").value=d.min;$("cf-max").value=d.max!=null&&d.max!==d.min?d.max:"";
+  $("cf-basis").value=d.basis;$("cf-freq").value=String(d.freq);
+}
+function formDrug(){
+  const name=$("cf-name").value.trim(),min=parseFloat($("cf-min").value),mv=parseFloat($("cf-max").value);
+  const max=isFinite(mv)&&mv>=min?mv:min,basis=$("cf-basis").value,freq=+$("cf-freq").value;
+  const l=drugs.find(x=>x.id===selId);
+  if(l&&l.name.toLowerCase()===name.toLowerCase()&&l.min===min&&(l.max??l.min)===max&&l.basis===basis&&+l.freq===freq)return l;
+  return {adhoc:true,name:name||"Your drug",route:"",min,max,basis,freq,maxDose:null,maxDay:null,notes:"",source:""};
+}
+function renderNames(){$("drug-names").innerHTML=drugs.map(d=>`<option value="${esc(d.name)}"></option>`).join("")}
+$("cf-name").addEventListener("input",()=>{
+  const n=$("cf-name").value.trim().toLowerCase(),m=drugs.find(d=>d.name.toLowerCase()===n);
+  if(m&&m.id!==selId){selId=m.id;save(K.sel,selId);fillForm(m);renderList()}
+  renderResult();
+});
+["cf-min","cf-max","cf-basis","cf-freq"].forEach(id=>$(id).addEventListener("input",renderResult));
+$("result").addEventListener("click",e=>{
+  if(e.target.id!=="save-adhoc")return;
+  const d=formDrug();if(!d.adhoc||!(d.min>0))return;
+  const rec={id:"u"+Date.now().toString(36),name:$("cf-name").value.trim()||"My drug",route:"",use:"",min:d.min,max:d.max,basis:d.basis,freq:d.freq,maxDose:null,maxDay:null,notes:"",source:"",custom:true};
+  drugs.push(rec);selId=rec.id;save(K.sel,selId);persist();renderNames();renderList();renderResult();toast("Saved to My drugs");
+});
+
+function renderResult(){
+  const el=$("result");
+  const d=formDrug();
+  const w=+weight;
+  if(!(d.min>0)){el.innerHTML=`<div class="result"><div class="head"><h2>${esc(d.name)}</h2></div><div class="notes" style="padding-top:12px">Enter the dose in mg/kg to calculate.</div></div>`;return}
+  if(!(w>0)){el.innerHTML=`<div class="result"><div class="head"><h2>${esc(d.name)}</h2><div class="rule">${ruleText(d)}</div></div><div class="notes" style="padding-top:12px">Enter the weight to calculate.</div></div>`;return}
+  const c=calc(d,w);
+  const wFlag=(d.minKg!=null&&w<d.minKg)||(d.maxKg!=null&&w>=d.maxKg)?`<div class="flag">This entry is for ${d.maxKg!=null?`under ${d.maxKg} kg`:`${d.minKg} kg and over`}. Check the other ${esc(d.name.split(" (")[0])} entry.</div>`:"";
+  el.innerHTML=`<div class="result" aria-live="polite">
+    <div class="head">${d.route?`<div><span class="route">${esc(d.route)}</span></div>`:""}<h2>${esc(d.name)}</h2>
+      <div class="rule">${ruleText(d)} · ${FREQ_SHORT[d.freq]??""}</div></div>
+    <div class="figs">
+      <div class="fig"><div class="s">Each dose</div><div class="v">${range(c.doseLo,c.doseHi,"")}<small>mg</small></div><div class="s">${esc(freqText(d))}</div></div>
+      <div class="fig"><div class="s">Per day</div><div class="v">${c.day?range(c.day[0],c.day[1],""):"—"}<small>${c.day?"mg":""}</small></div><div class="s">${c.day?`in ${c.f} dose${c.f>1?"s":""}`:"one-off dose"}</div></div>
+    </div>
+    <div class="working">${esc(working(d,w,c))}</div>
+    ${c.capped?`<div class="flag" style="margin-top:12px">Capped at the ${esc(c.caps.join(", "))}.</div>`:""}
+    ${wFlag}
+    ${d.notes?`<div class="notes">${esc(d.notes)}</div>`:""}
+    ${d.adhoc?`<div class="save-row"><button class="btn" id="save-adhoc" style="width:100%">Save to My drugs</button></div>`:""}
+    <div class="src">${d.adhoc?"Your own dose. Check it against your formulary.":`${d.source?`Source: ${esc(d.source)}`:"Source: not given"}${d.custom?" · added by you":""}`}</div>
+  </div>`;
+}
+function renderList(){
+  const q=$("q").value.trim().toLowerCase();
+  const items=drugs.filter(d=>!q||[d.name,d.route,d.use].join(" ").toLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name));
+  $("list").innerHTML=items.length?items.map(d=>`<li><button data-id="${esc(d.id)}" aria-current="${d.id===selId}"><span class="nm"><b>${esc(d.name)}</b><span>${esc(d.route)} · ${esc(d.use||"")}</span></span><span class="rt">${ruleText(d)}<br>${FREQ_SHORT[d.freq]??""}</span></button></li>`).join(""):`<li class="empty">No drug matches “${esc(q)}”. Add it under My drugs.</li>`;
+}
+$("list").addEventListener("click",e=>{const b=e.target.closest("button[data-id]");if(!b)return;selId=b.dataset.id;save(K.sel,selId);const sd=drugs.find(x=>x.id===selId);if(sd)fillForm(sd);renderResult();renderList();$("result").scrollIntoView({behavior:"smooth",block:"nearest"})});
+$("q").addEventListener("input",renderList);
+function setW(v){v=Math.round(v*10)/10;if(v<0)v=0;weight=v;$("weight").value=v;save(K.w,v);renderResult()}
+$("weight").value=weight;
+$("weight").addEventListener("input",e=>{weight=parseFloat(e.target.value)||0;save(K.w,weight);renderResult()});
+$("w-minus").onclick=()=>setW((+weight||0)-(weight>10?1:0.5));
+$("w-plus").onclick=()=>setW((+weight||0)+(weight>=10?1:0.5));
+
+/* tabs */
+function showTab(t){document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t));["calc","study","drugs"].forEach(x=>$("tab-"+x).hidden=x!==t);save(K.tab,t);if(t==="study")renderCard();if(t==="drugs")renderManage();if(t==="calc"){renderResult();renderList()}window.scrollTo(0,0)}
+document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+
+/* flashcards */
+let order=[],pos=0;
+function buildOrder(shuffle){const ids=drugs.map(d=>d.id);const unknown=ids.filter(i=>!known.has(i)),kn=ids.filter(i=>known.has(i));order=unknown.concat(kn);if(shuffle){for(let i=order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]]}}pos=0}
+function renderCard(){
+  if(!order.length||order.some(id=>!drugs.find(d=>d.id===id))||order.length!==drugs.length)buildOrder(false);
+  $("card").classList.remove("flipped");
+  const d=drugs.find(x=>x.id===order[pos]);if(!d)return;
+  $("c-route").textContent=d.route||"";$("c-name").textContent=d.name;$("c-use").textContent=d.use||"";
+  $("c-rule").textContent=ruleText(d);$("c-freq").textContent=freqText(d);
+  $("c-max").textContent=[d.maxDose?`max ${fmt(d.maxDose)} mg/dose`:"",d.maxDay?`max ${fmt(d.maxDay)} mg/day`:""].filter(Boolean).join(" · ");
+  $("c-src").textContent=d.source?`Source: ${d.source}`:"";
+  $("c-pos").textContent=`Card ${pos+1} of ${order.length}`;
+  $("c-known").textContent=`${[...known].filter(i=>drugs.some(d=>d.id===i)).length} known`;
+}
+function flip(){$("card").classList.toggle("flipped")}
+$("card").onclick=flip;$("card").onkeydown=e=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();flip()}};
+function next(){pos=(pos+1)%order.length;renderCard()}
+$("c-good").onclick=()=>{known.add(order[pos]);save(K.known,[...known]);next()};
+$("c-again").onclick=()=>{const id=order[pos];known.delete(id);save(K.known,[...known]);order.splice(pos,1);order.splice(Math.min(pos+3,order.length),0,id);renderCard()};
+$("c-shuffle").onclick=()=>{buildOrder(true);renderCard()};
+$("c-reset").onclick=()=>{known.clear();save(K.known,[]);buildOrder(false);renderCard();toast("Progress reset")};
+
+/* quiz */
+let z=null,score={r:0,n:0};
+function newQ(){
+  const pool=drugs.filter(d=>d.min>0);const d=pool[Math.floor(Math.random()*pool.length)];
+  let w;const lo=d.minKg??3,hi=d.maxKg?d.maxKg-0.5:40;w=Math.round((lo+Math.random()*(hi-lo))*2)/2;if(w<lo)w=lo;
+  const askDay=d.freq>0&&Math.random()<0.4;
+  z={d,w,askDay,c:calc(d,w),done:false};
+  $("z-q").innerHTML=`A patient weighs <b class="num">${fmt(w)} kg</b>. What is the <b>${askDay?"total daily":"single"}</b> dose of <b>${esc(d.name)}</b> (${esc(d.route)})?`;
+  $("z-label").textContent=`Your answer (mg ${askDay?"per day":"per dose"})`;
+  $("z-a").value="";$("z-v").innerHTML="";
+}
+function reveal(ok,given){
+  const {d,w,c,askDay}=z;
+  const ans=askDay?range(c.day[0],c.day[1],"mg/day"):range(c.doseLo,c.doseHi,"mg/dose");
+  $("z-v").innerHTML=`<div class="verdict ${ok?"ok":"no"}"><b>${ok===null?"Answer":ok?"Correct":"Not quite"}:</b> ${ans}${given!=null&&!ok?` (you said ${fmt(given)} mg)`:""}<pre>${esc(ruleText(d)+", "+freqText(d)+"\n"+working(d,w,c))}</pre></div>`;
+}
+$("z-check").onclick=()=>{
+  if(!z||z.done)return;const g=parseFloat($("z-a").value);if(!isFinite(g)){$("z-a").focus();return}
+  const lo=z.askDay?z.c.day[0]:z.c.doseLo,hi=z.askDay?z.c.day[1]:z.c.doseHi;const tol=Math.max(hi*0.02,0.01);
+  const ok=g>=lo-tol&&g<=hi+tol;z.done=true;score.n++;if(ok)score.r++;
+  $("z-score").textContent=`Score this session: ${score.r} / ${score.n}`;reveal(ok,g);
+};
+$("z-show").onclick=()=>{if(!z)return;if(!z.done){z.done=true;score.n++;$("z-score").textContent=`Score this session: ${score.r} / ${score.n}`}reveal(null)};
+$("z-next").onclick=newQ;
+$("z-a").addEventListener("keydown",e=>{if(e.key==="Enter")$("z-check").click()});
+function mode(q){$("m-cards").setAttribute("aria-pressed",!q);$("m-quiz").setAttribute("aria-pressed",q);$("cards-pane").hidden=q;$("quiz-pane").hidden=!q;if(q&&!z)newQ()}
+$("m-cards").onclick=()=>mode(false);$("m-quiz").onclick=()=>mode(true);
+
+/* manage */
+let editId=null,pendingDel=null,pendingRestore=false;
+function renderManage(){
+  const sorted=[...drugs].sort((a,b)=>a.name.localeCompare(b.name));
+  $("mlist").innerHTML=sorted.map(d=>pendingDel===d.id?`<li><div class="confirm" style="flex:1"><span>Delete ${esc(d.name)}?</span><div class="row"><button class="btn" data-act="keep">Keep</button><button class="btn again" data-act="del-yes" data-id="${esc(d.id)}">Delete</button></div></div></li>`:
+   `<li><span class="nm">${d.custom?'<span class="tag">Yours</span>':""}<b>${esc(d.name)}</b><span>${esc(d.route)} · ${ruleText(d)} · ${FREQ_SHORT[d.freq]??""}</span></span><button class="icon-btn" data-act="edit" data-id="${esc(d.id)}">Edit</button><button class="icon-btn" data-act="del" data-id="${esc(d.id)}" aria-label="Delete ${esc(d.name)}">✕</button></li>`).join("");
+  $("reset-zone").innerHTML=pendingRestore?`<div class="confirm"><span>This replaces your list with the original ${SEED.length} drugs. Drugs you added or edited will be lost.</span><div class="row"><button class="btn" id="r-no">Cancel</button><button class="btn again" id="r-yes">Restore</button></div></div>`:`<button class="btn" id="restore" style="width:100%">Restore the original drug list</button>`;
+}
+$("mlist").addEventListener("click",e=>{const b=e.target.closest("button[data-act]");if(!b)return;const a=b.dataset.act,id=b.dataset.id;
+  if(a==="edit")openEditor(id);
+  if(a==="del"){pendingDel=id;renderManage()}
+  if(a==="keep"){pendingDel=null;renderManage()}
+  if(a==="del-yes"){drugs=drugs.filter(d=>d.id!==id);pendingDel=null;persist();renderManage();toast("Drug deleted")}
+});
+$("reset-zone").addEventListener("click",e=>{const t=e.target.id;
+  if(t==="restore"){pendingRestore=true;renderManage()}
+  if(t==="r-no"){pendingRestore=false;renderManage()}
+  if(t==="r-yes"){drugs=SEED.map(d=>({...d}));pendingRestore=false;persist();renderManage();toast("Original list restored")}
+});
+function persist(){save(K.drugs,drugs);order=[];renderNames();if(!drugs.find(d=>d.id===selId)&&drugs[0])selId=drugs[0].id}
+function openEditor(id){
+  editId=id;const d=id?drugs.find(x=>x.id===id):{basis:"day",freq:3};
+  $("ed-title").textContent=id?`Edit ${d.name}`:"Add a drug";
+  $("f-name").value=d.name||"";$("f-route").value=d.route||"";$("f-use").value=d.use||"";
+  $("f-min").value=d.min??"";$("f-max").value=d.max!=null&&d.max!==d.min?d.max:"";
+  $("f-basis").value=d.basis||"day";$("f-freq").value=String(d.freq??3);
+  $("f-maxdose").value=d.maxDose??"";$("f-maxday").value=d.maxDay??"";$("f-notes").value=d.notes||"";$("f-source").value=d.source||"";
+  $("f-err").hidden=true;$("editor").hidden=false;$("f-name").focus();$("editor").scrollIntoView({behavior:"smooth",block:"start"});
+}
+$("add").onclick=()=>openEditor(null);
+$("f-cancel").onclick=()=>{$("editor").hidden=true;editId=null};
+$("editor").addEventListener("submit",e=>{
+  e.preventDefault();
+  const num=v=>{const n=parseFloat(v);return isFinite(n)?n:null};
+  const min=num($("f-min").value),max=num($("f-max").value)??min,freq=+$("f-freq").value,basis=$("f-basis").value;
+  const err=m=>{$("f-err").textContent=m;$("f-err").hidden=false};
+  if(!$("f-name").value.trim())return err("Give the drug a name.");
+  if(!(min>0))return err("Enter the mg/kg dose, for example 3.");
+  if(max<min)return err("“Dose to” must be the same as or higher than “Dose from”.");
+  if(basis==="day"&&freq===0)return err("A mg/kg/day dose needs a frequency. Choose how often, or switch to per dose.");
+  const rec={name:$("f-name").value.trim(),route:$("f-route").value.trim(),use:$("f-use").value.trim(),min,max,basis,freq,
+    maxDose:num($("f-maxdose").value),maxDay:num($("f-maxday").value),notes:$("f-notes").value.trim(),source:$("f-source").value.trim()};
+  if(editId){const i=drugs.findIndex(d=>d.id===editId);drugs[i]={...drugs[i],...rec,custom:true}}
+  else{drugs.push({id:"u"+Date.now().toString(36),...rec,custom:true})}
+  persist();$("editor").hidden=true;toast(editId?"Changes saved":"Drug added");editId=null;renderManage();
+});
+
+let tt;function toast(m){const t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,1800)}
+
+renderNames();{const sd=drugs.find(x=>x.id===selId)||drugs[0];if(sd){selId=sd.id;fillForm(sd)}}
+renderResult();renderList();
+const startTab=load(K.tab,"calc");if(startTab!=="calc")showTab(startTab);
+})();
+</script>
+
+<script>
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
+</script>
+</body>
+</html>
